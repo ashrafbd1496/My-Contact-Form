@@ -33,6 +33,20 @@ class MyContactForm
 
         //add shortcode
         add_shortcode('myctform_shortcode', array($this, 'load_myctform_shortcode'));
+
+        //load javascript at footer
+        add_action('wp_footer', array($this, 'load_script_at_footer'));
+
+        //Resigter Rest API
+        add_action('rest_api_init', array($this, 'register_rest_api'));
+    }
+
+    /**
+     * Prints scripts or data before the closing body tag on the front end.
+     *
+     */
+    function wp_footer(): void
+    {
     }
     public function create_custom_post()
     {
@@ -61,7 +75,7 @@ class MyContactForm
         wp_enqueue_style(
             'myctform-stylesheet.css',
             plugin_dir_url(__FILE__) . 'assets/css/myctform-stylesheet.css',
-            [],
+            ['bootstrap'],
             'all'
         );
 
@@ -79,8 +93,8 @@ class MyContactForm
     public function load_myctform_shortcode()
     { ?>
 
-        <div class="container">
-            <form id="myctform_form" action="/">
+        <div class="container pt-5">
+            <form id="myctform_form" action="<?php echo esc_url(get_rest_url(null, 'my-contact-form/v1/send-email')); ?>">
                 <div class="row">
                     <div class="col-md-3"></div>
                     <div class="col-md-6">
@@ -104,7 +118,7 @@ class MyContactForm
                             <input type="tel" class="form-control" id="tel" placeholder="Enter Phone Number" name="tel">
                         </div>
                         <div class="form-group mb-2">
-                            <textarea name="msg" placeholder="Write your message" id="msg" class="form-control"></textarea>
+                            <textarea name="msg" placeholder="Write your message" id="msg" class="form-control" rows="5"></textarea>
                         </div>
 
 
@@ -116,6 +130,67 @@ class MyContactForm
             </form>
         </div>
 
+    <?php }
+
+    public function load_script_at_footer()
+    { ?>
+
+        <script>
+            var nonce = '<?php echo wp_create_nonce('wp_myctform_nonce'); ?>';
+
+            (function($) {
+
+                $('#myctform_form').submit(function(event) {
+
+                    event.preventDefault();
+                    var form = $(this).serialize();
+
+                    $.ajax({
+                        method: 'POST',
+                        url: '<?php echo get_rest_url(null, 'my-contact-form/v1/send-email'); ?>',
+                        headers: {
+                            'X-WP-Nonce': nonce
+                        },
+                        data: form
+                    });
+
+
+
+
+                });
+            })(jQuery)
+        </script>
+
 <?php }
+
+    public function register_rest_api()
+    {
+        register_rest_route('my-contact-form/v1', 'send-email', array(
+            'methods' => 'POST',
+            'callback' => array($this, 'handle_contact_form')
+        ));
+    }
+
+    public function handle_contact_form($data)
+    {
+        $headers = $data->get_headers();
+        $params = $data->get_params();
+
+        $nonce = $headers['x_wp_nonce'][0];
+
+        if (wp_verify_nonce($nonce, 'wp_myctform_nonce')) {
+            return new WP_REST_Response('Message not sent', 403);
+        }
+
+        $post_id = wp_insert_post([
+            'post_type' => 'myctform_post_type',
+            'post_title' => 'Contact  enquery',
+            'post_status' => 'publish'
+        ]);
+
+        if ($post_id) {
+            return new WP_REST_Response('thank you for your email');
+        }
+    }
 }
 new MyContactForm;

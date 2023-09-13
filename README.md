@@ -1,1 +1,1 @@
-# My-Contact-Form
+# My contact form plugin
