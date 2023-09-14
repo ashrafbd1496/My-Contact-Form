@@ -148,5 +148,6 @@ function custom_action() {
 }
 
 add_action( 'wp_ajax_bisnu_form_submit', 'custom_action' );
+add_action( 'wp_ajax_nopriv_bisnu_form_submit', 'custom_action' );
 
 new MyContactForm;
