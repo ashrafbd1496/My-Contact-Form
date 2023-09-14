@@ -15,86 +15,80 @@
  * Domain Path:       /languages
  */
 
-if (!defined('ABSPATH')) {
-    echo "Ashraf the developer know's what you're doing?";
-    exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	echo "Ashraf the developer know's what you're doing?";
+	exit;
 }
 
-class MyContactForm
-{
-    public function __construct()
-    {
+class MyContactForm {
+	public function __construct() {
 
-        //create custom post type
-        add_action('init', array($this, 'create_custom_post'));
+		//create custom post type
+		add_action( 'init', array( $this, 'create_custom_post' ) );
 
-        //add asets(js, css, etc)
-        add_action('wp_enqueue_scripts', array($this, 'load_assets'));
+		//add asets(js, css, etc)
+		add_action( 'wp_enqueue_scripts', array( $this, 'load_assets' ) );
 
-        //add shortcode
-        add_shortcode('myctform_shortcode', array($this, 'load_myctform_shortcode'));
+		//add shortcode
+		add_shortcode( 'myctform_shortcode', array( $this, 'load_myctform_shortcode' ) );
 
-        //load javascript at footer
-        add_action('wp_footer', array($this, 'load_script_at_footer'));
 
-        //Resigter Rest API
-        add_action('rest_api_init', array($this, 'register_rest_api'));
-    }
+		//Resigter Rest API
+		add_action( 'rest_api_init', array( $this, 'register_rest_api' ) );
+	}
 
-    /**
-     * Prints scripts or data before the closing body tag on the front end.
-     *
-     */
-    function wp_footer(): void
-    {
-    }
-    public function create_custom_post()
-    {
+	/**
+	 * Prints scripts or data before the closing body tag on the front end.
+	 *
+	 */
+	function wp_footer(): void {
+	}
 
-        $args = array(
-            'public' => true,
-            'has_archive' => true,
-            'supports' => array('title'),
-            'exclude_form_search' => true,
-            'publically_queryable' => false,
-            'capability' => 'manage_options',
-            'labels' => array(
-                'name' => 'My Contat Form',
-                'singular_name' => 'Contact Form',
-            ),
-            'menu_icon' => 'dashicons-media-text',
-        );
+	public function create_custom_post() {
 
-        register_post_type('myctform_post_type', $args);
-    }
+		$args = array(
+			'public'               => true,
+			'has_archive'          => true,
+			'supports'             => array( 'title', 'editor' ),
+			'exclude_form_search'  => true,
+			'publically_queryable' => true,
+			'capability'           => 'manage_options',
+			'labels'               => array(
+				'name'          => 'My Contat Form',
+				'singular_name' => 'Contact Form',
+			),
+			'menu_icon'            => 'dashicons-media-text',
+		);
 
-    public function load_assets()
-    {
-        wp_enqueue_style('bootstrap-css', 'https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css');
+		register_post_type( 'myctform_post_type', $args );
+	}
 
-        wp_enqueue_style(
-            'myctform-stylesheet.css',
-            plugin_dir_url(__FILE__) . 'assets/css/myctform-stylesheet.css',
-            ['bootstrap'],
-            'all'
-        );
+	public function load_assets() {
+		wp_enqueue_style( 'bootstrap-css', 'https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css' );
 
-        wp_enqueue_script('bootstrap-js', 'https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js', array('jquery'), null, true);
+		wp_enqueue_style(
+			'myctform-stylesheet.css',
+			plugin_dir_url( __FILE__ ) . 'assets/css/myctform-stylesheet.css',
+			[ 'bootstrap' ],
+			'all'
+		);
 
-        wp_enqueue_script(
-            'myctform-script.js',
-            plugin_dir_url(__FILE__) . 'assets/js/myctform-script.js',
-            ['jquery'],
-            null,
-            true
-        );
-    }
+		wp_enqueue_script( 'bootstrap-js', 'https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js', array( 'jquery' ), null, true );
 
-    public function load_myctform_shortcode()
-    { ?>
+		wp_enqueue_script(
+			'myctform-script.js',
+			plugin_dir_url( __FILE__ ) . 'assets/js/myctform-script.js',
+			[ 'jquery' ],
+			null,
+			true
+		);
+	}
+
+	public function load_myctform_shortcode() {
+		?>
 
         <div class="container pt-5">
-            <form id="myctform_form" action="<?php echo esc_url(get_rest_url(null, 'my-contact-form/v1/send-email')); ?>">
+            <form id="myctform_form" action="">
                 <div class="row">
                     <div class="col-md-3"></div>
                     <div class="col-md-6">
@@ -118,11 +112,13 @@ class MyContactForm
                             <input type="tel" class="form-control" id="tel" placeholder="Enter Phone Number" name="tel">
                         </div>
                         <div class="form-group mb-2">
-                            <textarea name="msg" placeholder="Write your message" id="msg" class="form-control" rows="5"></textarea>
+                            <textarea name="msg" placeholder="Write your message" id="msg" class="form-control"
+                                      rows="5"></textarea>
                         </div>
 
 
-                        <button class="btn btn-success btn-block" type="submit" class="btn btn-default">Send Message</button>
+                        <button class="btn btn-success btn-block" type="submit" class="btn btn-default">Send Message
+                        </button>
 
                     </div>
                     <div class="col-md-3"></div>
@@ -130,67 +126,27 @@ class MyContactForm
             </form>
         </div>
 
-    <?php }
+		<?php
+	}
 
-    public function load_script_at_footer()
-    { ?>
-
-        <script>
-            var nonce = '<?php echo wp_create_nonce('wp_myctform_nonce'); ?>';
-
-            (function($) {
-
-                $('#myctform_form').submit(function(event) {
-
-                    event.preventDefault();
-                    var form = $(this).serialize();
-
-                    $.ajax({
-                        method: 'POST',
-                        url: '<?php echo get_rest_url(null, 'my-contact-form/v1/send-email'); ?>',
-                        headers: {
-                            'X-WP-Nonce': nonce
-                        },
-                        data: form
-                    });
-
-
-
-
-                });
-            })(jQuery)
-        </script>
-
-<?php }
-
-    public function register_rest_api()
-    {
-        register_rest_route('my-contact-form/v1', 'send-email', array(
-            'methods' => 'POST',
-            'callback' => array($this, 'handle_contact_form')
-        ));
-    }
-
-    public function handle_contact_form($data)
-    {
-        $headers = $data->get_headers();
-        $params = $data->get_params();
-
-        $nonce = $headers['x_wp_nonce'][0];
-
-        if (wp_verify_nonce($nonce, 'wp_myctform_nonce')) {
-            return new WP_REST_Response('Message not sent', 403);
-        }
-
-        $post_id = wp_insert_post([
-            'post_type' => 'myctform_post_type',
-            'post_title' => 'Contact  enquery',
-            'post_status' => 'publish'
-        ]);
-
-        if ($post_id) {
-            return new WP_REST_Response('thank you for your email');
-        }
-    }
 }
+
+function custom_action() {
+	$email = $_POST['email'];
+	$name  = $_POST['name'];
+	$tel   = $_POST['tel'];
+	$msg   = $_POST['msg'];
+
+	$newPost = wp_insert_post( array(
+		'post_type'    => 'myctform_post_type',
+		'post_title'   => $name . ' Submit a new Form',
+		'post_content' => "Name: $name | Email: $email | Tel: $tel | Msg: $msg",
+		'post_status'  => 'publish',
+	) );
+
+	echo $newPost;
+}
+
+add_action( 'wp_ajax_bisnu_form_submit', 'custom_action' );
+
 new MyContactForm;
