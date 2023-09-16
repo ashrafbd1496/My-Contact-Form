@@ -1,18 +1,22 @@
 (function ($) {
     $('#myctform_form').submit(function (event) {
         event.preventDefault();
-        var name = $('#name').val();
-        var email = $("#email").val();
-        var tel = $("#tel").val();
-        var msg = $("#msg").val();
+        let name = $('#name').val();
+        let email = $("#email").val();
+        let tel = $("#tel").val();
+        let msg = $("#msg").val();
 
 
-        var form = new FormData();
+        let form = new FormData();
         form.append('action', 'bisnu_form_submit');
         form.append('name', name);
         form.append('email', email);
         form.append('tel', tel);
         form.append('msg', msg);
+        if (email == '' || name == '' || tel == '' || msg == '') {
+            alert("Please fill all the fieald");
+            return;
+        }
 
         $.ajax({
             url: '/wp-admin/admin-ajax.php',
@@ -21,7 +25,9 @@
             processData: false,
             contentType: false,
             success: function (rs) {
+                $('#myctform_form').trigger("reset");
                 console.log("Success", rs)
+                alert('Form Submit Successfully');
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 console.log("Error", errorThrown);

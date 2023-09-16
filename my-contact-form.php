@@ -34,7 +34,6 @@ class MyContactForm {
 
 
 		//Resigter Rest API
-		add_action( 'rest_api_init', array( $this, 'register_rest_api' ) );
 	}
 
 	/**
@@ -85,6 +84,7 @@ class MyContactForm {
 	}
 
 	public function load_myctform_shortcode() {
+		ob_start();
 		?>
 
         <div class="container pt-5">
@@ -127,16 +127,29 @@ class MyContactForm {
         </div>
 
 		<?php
+		echo ob_get_clean();
 	}
 
 }
 
+//After submit the form this method will fire
 function custom_action() {
 	$email = $_POST['email'];
 	$name  = $_POST['name'];
 	$tel   = $_POST['tel'];
 	$msg   = $_POST['msg'];
-
+	ob_start();
+	?>
+    <ul>
+        <li>Name : <?php echo $name; ?></li>
+        <li>Email : <?php echo $email; ?></li>
+        <li>Telephone : <?php echo $tel; ?></li>
+        <li>Message : <?php echo $msg; ?></li>
+    </ul>
+	<?php
+	$email_content = ob_get_clean();
+	$headers       = array( 'Content-Type: text/html; charset=UTF-8' );
+	wp_mail( get_option( 'admin_email' ), 'Contact Form', $email_content, $headers );
 	$newPost = wp_insert_post( array(
 		'post_type'    => 'myctform_post_type',
 		'post_title'   => $name . ' Submit a new Form',
@@ -147,6 +160,7 @@ function custom_action() {
 	echo $newPost;
 }
 
+//Custom Hook register called : bisnu_form_submit
 add_action( 'wp_ajax_bisnu_form_submit', 'custom_action' );
 add_action( 'wp_ajax_nopriv_bisnu_form_submit', 'custom_action' );
 
